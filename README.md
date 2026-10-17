@@ -63,6 +63,16 @@ curl -s localhost:8787/api/mensaje -H 'content-type: application/json' \
 Routes, request and response shapes, and the voice-note upload are in
 [the API reference](docs/api.md).
 
+## Open the chat page
+
+```sh
+mise run web:dev
+```
+
+Serves the chat page on `http://localhost:8799`, with `/api` relayed to the
+server on port 8787. Running it for real, and deploying it, are in
+[the web channel](docs/web.md).
+
 ## Check
 
 ```sh

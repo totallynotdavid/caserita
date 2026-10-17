@@ -1,8 +1,8 @@
 # Architecture
 
 One Node 24 process runs TypeScript directly (type stripping, no build step).
-`server/` holds everything that runs. `web/` is an empty workspace package that
-a later change fills.
+`server/` holds the logic. `web/` is a Cloudflare Worker that serves the chat
+page and forwards `/api/*` to the server. See [the web channel](web.md).
 
 The model reads. The code decides. The language model turns a message into
 items; every amount, name rule and credit balance comes from the code.
@@ -65,6 +65,7 @@ answers.
 ## Tests
 
 `server/test` drives `handle` and the HTTP app with a stand-in extractor and
-temporary SQLite files. `ejemplos.test.ts` replays the extractions that
-`mise run eval` recorded from the real model for the 30 examples and requires
-the exact answer key.
+temporary SQLite files. `web/test` drives the Worker's fetch handler with fake
+bindings. `ejemplos.test.ts` replays the extractions that `mise run eval`
+recorded from the real model for the 30 examples and requires the exact answer
+key.
