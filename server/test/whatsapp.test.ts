@@ -74,9 +74,12 @@ function canal(
 
 describe("only the listed numbers are answered", () => {
   const LID = "184467440737@lid";
-  const permitido = permitirNumeros(["51999111222"], async (lid) =>
-    lid === LID ? "51999111222@s.whatsapp.net" : null,
-  );
+  const LID_CONSULTADO = "777000111@lid";
+  const permitido = permitirNumeros(["51999111222"], {
+    pnDeLid: async (lid) => (lid === LID ? "51999111222@s.whatsapp.net" : null),
+    lidDePn: async (pn) =>
+      pn === "51999111222@s.whatsapp.net" ? "777000111:3@lid" : null,
+  });
 
   test.each([
     ["by phone number", {}],
@@ -86,6 +89,7 @@ describe("only the listed numbers are answered", () => {
       { remoteJid: "999@lid", remoteJidAlt: "51999111222@s.whatsapp.net" },
     ],
     ["by a LID the session maps to the number", { remoteJid: LID }],
+    ["by a LID WhatsApp gives for the number", { remoteJid: LID_CONSULTADO }],
   ])("a listed sender addressed %s is answered", async (_n, key) => {
     const { recibir, enviados } = canal(
       { "vendí pan 2.50": venta },
@@ -118,7 +122,10 @@ describe("only the listed numbers are answered", () => {
   });
 
   test("an empty list answers everyone", () => {
-    expect(permitirNumeros([], async () => null)).toBeUndefined();
+    const nada = async () => null;
+    expect(
+      permitirNumeros([], { pnDeLid: nada, lidDePn: nada }),
+    ).toBeUndefined();
   });
 });
 

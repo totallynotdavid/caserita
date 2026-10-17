@@ -33,12 +33,16 @@ const numero = (jid: string | null | undefined) =>
 /**
  * Builds the sender check for a list of phone numbers (digits only). A chat
  * can arrive addressed by its LID, as it does when the sender shows a username
- * instead of a number; then the phone number is `remoteJidAlt` or, failing
- * that, the session's LID mapping.
+ * instead of a number; then the phone number is `remoteJidAlt`, the session's
+ * LID mapping, or the LID WhatsApp gives for each listed number. A fresh
+ * session knows no mapping, so the last lookup is the one that usually works.
  */
 export function permitirNumeros(
   numeros: string[],
-  pnDeLid: (lid: string) => Promise<string | null>,
+  mapeo: {
+    pnDeLid: (lid: string) => Promise<string | null>;
+    lidDePn: (pn: string) => Promise<string | null>;
+  },
 ): ((key: WAMessageKey) => Promise<boolean>) | undefined {
   if (numeros.length === 0) return undefined;
   const permitidos = new Set(numeros);
@@ -48,9 +52,14 @@ export function permitirNumeros(
       if (n && permitidos.has(n)) return true;
     }
     if (!remoteJid || !isLidUser(remoteJid)) return false;
-    const pn = await pnDeLid(remoteJid).catch(() => null);
-    const n = numero(pn);
-    return n !== undefined && permitidos.has(n);
+    const n = numero(await mapeo.pnDeLid(remoteJid).catch(() => null));
+    if (n !== undefined && permitidos.has(n)) return true;
+    const usuario = jidDecode(remoteJid)?.user;
+    for (const p of permitidos) {
+      const lid = await mapeo.lidDePn(`${p}@s.whatsapp.net`).catch(() => null);
+      if (lid && jidDecode(lid)?.user === usuario) return true;
+    }
+    return false;
   };
 }
 
@@ -224,9 +233,12 @@ export async function iniciarWhatsapp(
   const recibir = crearReceptor({
     manejador,
     log,
-    permitido: permitirNumeros(permitidos, async (lid) =>
-      socket ? socket.signalRepository.lidMapping.getPNForLID(lid) : null,
-    ),
+    permitido: permitirNumeros(permitidos, {
+      pnDeLid: async (lid) =>
+        socket ? socket.signalRepository.lidMapping.getPNForLID(lid) : null,
+      lidDePn: async (pn) =>
+        socket ? socket.signalRepository.lidMapping.getLIDForPN(pn) : null,
+    }),
     descargar: (mensaje) =>
       downloadMediaMessage(
         mensaje,
