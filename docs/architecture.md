@@ -31,7 +31,8 @@ flowchart LR
 | `store.ts`      | SQLite (`node:sqlite`): rows, ids of processed messages, and the pending question.                                                               |
 | `reply.ts`      | Every sentence sent to Doña Rosa, in plain Spanish.                                                                                              |
 | `app.ts`        | The Hono routes. See [the API](api.md).                                                                                                          |
-| `server.ts`     | Wires the real model, Whisper and SQLite to the app and listens on `PORT`.                                                                       |
+| `whatsapp.ts`   | The WhatsApp channel: a linked number's one-to-one chats in, `handle` replies out. See [WhatsApp](whatsapp.md).                                  |
+| `server.ts`     | Wires the real model, Whisper and SQLite to the app and listens on `PORT`. Starts the WhatsApp channel when `WHATSAPP=on`.                       |
 | `csv.ts`        | The input and output CSV formats.                                                                                                                |
 | `score.ts`      | Compares rows with an answer key for the eval.                                                                                                   |
 
@@ -64,7 +65,7 @@ answers.
 
 ## Tests
 
-`server/test` drives `handle` and the HTTP app with a stand-in extractor and
-temporary SQLite files. `ejemplos.test.ts` replays the extractions that
-`mise run eval` recorded from the real model for the 30 examples and requires
-the exact answer key.
+`server/test` drives `handle`, the HTTP app and the WhatsApp message handler
+(with recorded Baileys messages) with a stand-in extractor and temporary SQLite
+files. `ejemplos.test.ts` replays the extractions that `mise run eval` recorded
+from the real model for the 30 examples and requires the exact answer key.
