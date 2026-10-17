@@ -122,9 +122,11 @@ describe("only the listed numbers are answered", () => {
   });
 
   test("an empty list answers everyone", () => {
-    const nada = async () => null;
     expect(
-      permitirNumeros([], { pnDeLid: nada, lidDePn: nada }),
+      permitirNumeros([], {
+        pnDeLid: async () => null,
+        lidDePn: async () => null,
+      }),
     ).toBeUndefined();
   });
 });

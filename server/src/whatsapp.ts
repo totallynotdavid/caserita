@@ -55,11 +55,12 @@ export function permitirNumeros(
     const n = numero(await mapeo.pnDeLid(remoteJid).catch(() => null));
     if (n !== undefined && permitidos.has(n)) return true;
     const usuario = jidDecode(remoteJid)?.user;
-    for (const p of permitidos) {
-      const lid = await mapeo.lidDePn(`${p}@s.whatsapp.net`).catch(() => null);
-      if (lid && jidDecode(lid)?.user === usuario) return true;
-    }
-    return false;
+    const lids = await Promise.all(
+      [...permitidos].map((p) =>
+        mapeo.lidDePn(`${p}@s.whatsapp.net`).catch(() => null),
+      ),
+    );
+    return lids.some((lid) => lid && jidDecode(lid)?.user === usuario);
   };
 }
 
