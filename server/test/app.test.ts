@@ -42,6 +42,27 @@ function appDe(
           }),
         ],
       }),
+      "fié 2 atunes a Rosa por 20": lectura({
+        items: [
+          item({
+            tipo: "fiado",
+            producto: "atún",
+            cantidad: 2,
+            total_dicho: 20,
+            cliente: "Rosa",
+          }),
+        ],
+      }),
+      "Rosa pagó 20": lectura({
+        items: [
+          item({
+            tipo: "cobro_fiado",
+            producto: "atún",
+            total_dicho: 20,
+            cliente: "Rosa",
+          }),
+        ],
+      }),
     }),
     extra.transcribir ? { transcribir: extra.transcribir } : {},
   );
@@ -240,6 +261,109 @@ describe("GET /api/resumen", () => {
       estimacion: { cuota: null },
     });
     expect(resumen["pendientes"]).toHaveLength(1);
+  });
+});
+
+describe("movimientos", () => {
+  test("lists rows with dates and edits the amount and quantity", async () => {
+    const app = appDe();
+    await app.request(
+      "/api/mensaje",
+      json({ texto: "vendí 10 panes a 0.30", id: "venta-1" }),
+    );
+    const before = (await (await app.request("/api/movimientos")).json()) as {
+      id: number;
+      monto: string;
+      dia: string;
+      hora: string;
+    }[];
+    expect(before).toHaveLength(1);
+    expect(before[0]).toMatchObject({ monto: "3.00" });
+    expect(before[0]?.dia).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(before[0]?.hora).toMatch(/^\d{2}:\d{2}$/);
+
+    const editado = await app.request(`/api/movimientos/${before[0]!.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ cantidad: 2, monto: "8.50" }),
+    });
+    expect(editado.status).toBe(200);
+    const resumen = (await (await app.request("/api/resumen")).json()) as {
+      ventas: string;
+    };
+    expect(resumen.ventas).toBe("8.50");
+    const despues = (await (await app.request("/api/movimientos")).json()) as {
+      cantidad: string;
+      monto: string;
+      requiere_confirmacion: string;
+    }[];
+    expect(despues[0]).toMatchObject({
+      cantidad: "2",
+      monto: "8.50",
+      requiere_confirmacion: "NO",
+    });
+  });
+
+  test("deleting a paid credit also deletes its payment", async () => {
+    const app = appDe();
+    await app.request(
+      "/api/mensaje",
+      json({ texto: "fié 2 atunes a Rosa por 20", id: "fiado-1" }),
+    );
+    await app.request(
+      "/api/mensaje",
+      json({ texto: "Rosa pagó 20", id: "cobro-1" }),
+    );
+    const movimientos = (await (
+      await app.request("/api/movimientos")
+    ).json()) as { id: number; tipo: string }[];
+    const fiado = movimientos.find((x) => x.tipo === "fiado");
+    const borrado = await app.request(`/api/movimientos/${fiado!.id}`, {
+      method: "DELETE",
+    });
+    expect(await borrado.json()).toMatchObject({
+      borrado: true,
+      cobro_borrado: true,
+    });
+    expect(await (await app.request("/api/movimientos")).json()).toEqual([]);
+  });
+
+  test("clearing the account removes rows and the message log", async () => {
+    const app = appDe();
+    await app.request(
+      "/api/mensaje",
+      json({ texto: "vendí 10 panes a 0.30", id: "para-borrar" }),
+    );
+    expect(await (await app.request("/api/movimientos")).json()).toHaveLength(
+      1,
+    );
+    expect(
+      await (
+        await app.request("/api/movimientos", { method: "DELETE" })
+      ).json(),
+    ).toEqual({
+      borrado: true,
+    });
+    expect(await (await app.request("/api/movimientos")).json()).toEqual([]);
+
+    await app.request(
+      "/api/mensaje",
+      json({ texto: "vendí 10 panes a 0.30", id: "para-borrar" }),
+    );
+    expect(await (await app.request("/api/movimientos")).json()).toHaveLength(
+      1,
+    );
+  });
+
+  test("rejects malformed movement edits", async () => {
+    const app = appDe();
+    const res = await app.request("/api/movimientos/no", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ monto: "S/ 4" }),
+    });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "El id no es válido" });
   });
 });
 

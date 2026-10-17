@@ -4,6 +4,20 @@ const textoHablar = document.getElementById("hablar-texto");
 const formulario = document.getElementById("formulario");
 const campo = document.getElementById("texto");
 const botones = document.querySelectorAll("button, input");
+const vistaChat = document.getElementById("chat-vista");
+const vistaCuentas = document.getElementById("cuentas-vista");
+const tabChat = document.getElementById("tab-chat");
+const tabCuentas = document.getElementById("tab-cuentas");
+const cuentasContenido = document.getElementById("cuentas-contenido");
+const editor = document.getElementById("editor");
+const editorForm = document.getElementById("editor-form");
+const editorTitulo = document.getElementById("editor-titulo");
+const editorCantidad = document.getElementById("editor-cantidad");
+const editorMonto = document.getElementById("editor-monto");
+const editorAviso = document.getElementById("editor-aviso");
+const borrarPaso = document.getElementById("borrar-paso");
+const borrarPregunta = document.getElementById("borrar-pregunta");
+const limpiarDialogo = document.getElementById("limpiar-dialogo");
 
 const PREGUNTA_CUOTA = "¿Cuánto puedo pagar de cuota al mes?";
 const FORMATOS_AUDIO = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm"];
@@ -25,6 +39,7 @@ const MSG_CORTO =
 let ocupado = false;
 let grabacion = null;
 let hablando = null;
+let movimientoActual = null;
 
 function bajar() {
   chat.scrollTop = chat.scrollHeight;
@@ -73,6 +88,7 @@ function botonEscuchar(texto) {
 }
 
 function detenerVoz() {
+  if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
   if (hablando) {
     hablando.textContent = "🔊 Escuchar";
@@ -112,9 +128,9 @@ function leerEnVoz(texto, boton) {
 
 function bloquear(valor) {
   ocupado = valor;
-  for (const elemento of botones) {
-    if (elemento.classList.contains("escuchar")) continue;
-    elemento.disabled = valor;
+  for (const control of botones) {
+    if (control.classList.contains("escuchar")) continue;
+    control.disabled = valor;
   }
 }
 
@@ -125,7 +141,17 @@ function nuevoId() {
 }
 
 function soles(monto) {
-  return `S/ ${monto}`;
+  return `S/ ${monto || "0.00"}`;
+}
+
+function sumarSoles(...montos) {
+  const centavos = montos.reduce(
+    (total, monto) => total + Math.round(Number(monto || 0) * 100),
+    0,
+  );
+  const signo = centavos < 0 ? "-" : "";
+  const valor = Math.abs(centavos);
+  return `${signo}${Math.floor(valor / 100)}.${String(valor % 100).padStart(2, "0")}`;
 }
 
 function textoResumen(r) {
@@ -150,14 +176,16 @@ async function pedir(url, opciones) {
   } catch {
     throw new Error(MSG_SIN_RED);
   }
+  const datos = await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
     throw new Error(
-      respuesta.status === 413
-        ? "El audio es muy largo. Mándelo más corto."
-        : MSG_FALLO,
+      datos?.error ||
+        (respuesta.status === 413
+          ? "El audio es muy largo. Mándelo más corto."
+          : MSG_FALLO),
     );
   }
-  return respuesta.json();
+  return datos;
 }
 
 async function conEspera(trabajo) {
@@ -168,7 +196,9 @@ async function conEspera(trabajo) {
   try {
     await trabajo();
   } catch (error) {
-    agregar("ella", error.message, { aviso: true });
+    agregar("ella", error instanceof Error ? error.message : MSG_FALLO, {
+      aviso: true,
+    });
   } finally {
     espera.fila.remove();
     bloquear(false);
@@ -259,6 +289,340 @@ function terminarGrabacion() {
   if (grabacion?.grabador.state === "recording") grabacion.grabador.stop();
 }
 
+function elemento(tipo, clase, texto) {
+  const nodo = document.createElement(tipo);
+  if (clase) nodo.className = clase;
+  if (texto !== undefined) nodo.textContent = texto;
+  return nodo;
+}
+
+const TIPO = {
+  venta: { palabra: "Venta", clase: "entra", verbo: "venta" },
+  gasto: { palabra: "Gasto", clase: "sale", verbo: "gasto" },
+  fiado: { palabra: "Fiado", clase: "fiado", verbo: "fiado" },
+  cobro_fiado: { palabra: "Cobro", clase: "entra", verbo: "cobro" },
+};
+
+function formatoDia(dia) {
+  const partes = dia.split("-").map(Number);
+  if (partes.length !== 3 || partes.some((x) => !x)) return dia;
+  const fecha = new Date(Date.UTC(partes[0], partes[1] - 1, partes[2]));
+  const texto = new Intl.DateTimeFormat("es-PE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(fecha);
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function detalleMovimiento(movimiento) {
+  const tipo = TIPO[movimiento.tipo] || TIPO.venta;
+  const cantidad = movimiento.cantidad === "1" ? "1" : movimiento.cantidad;
+  const titulo = elemento(
+    "strong",
+    "movimiento-producto",
+    `${cantidad} ${movimiento.producto}`,
+  );
+  const meta = elemento("span", "movimiento-meta", tipo.palabra);
+  if (movimiento.cliente) meta.append(` · ${movimiento.cliente}`);
+  const info = elemento("span", "movimiento-info");
+  info.append(meta, titulo);
+  return info;
+}
+
+function descripcionBorrado(movimiento) {
+  const tipo = TIPO[movimiento.tipo] || TIPO.venta;
+  return `¿Borrar esta ${tipo.verbo} de ${movimiento.cantidad} ${movimiento.producto}?`;
+}
+
+function botonMovimiento(movimiento) {
+  const tipo = TIPO[movimiento.tipo] || TIPO.venta;
+  const boton = elemento("button", `movimiento ${tipo.clase}`);
+  boton.type = "button";
+  const marca = elemento("span", "movimiento-marca", tipo.palabra);
+  const monto = elemento(
+    "strong",
+    `movimiento-monto ${movimiento.tipo === "gasto" ? "negativo" : ""}`,
+    movimiento.monto ? soles(movimiento.monto) : "Falta monto",
+  );
+  boton.append(marca, detalleMovimiento(movimiento), monto);
+  boton.addEventListener("click", () => abrirEditor(movimiento));
+  return boton;
+}
+
+function campoPendiente(movimiento) {
+  const articulo = elemento("article", "pendiente-fila");
+  const cabecera = elemento("div", "pendiente-cabecera");
+  cabecera.append(
+    elemento("span", "pendiente-etiqueta", "Falta monto"),
+    elemento("span", "pendiente-hora", movimiento.hora),
+  );
+  const titulo = elemento(
+    "strong",
+    "pendiente-titulo",
+    `${movimiento.cantidad} ${movimiento.producto}`,
+  );
+  const tipo = TIPO[movimiento.tipo] || TIPO.venta;
+  const descripcion = elemento(
+    "p",
+    "pendiente-descripcion",
+    `${tipo.palabra}${movimiento.cliente ? ` · ${movimiento.cliente}` : ""}`,
+  );
+  const form = elemento("form", "pendiente-form");
+  const input = elemento("input");
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.placeholder = "¿Cuánto fue?";
+  input.setAttribute("aria-label", `Monto de ${movimiento.producto}`);
+  const guardar = elemento("button", "boton-principal", "Guardar");
+  guardar.type = "submit";
+  form.append(input, guardar);
+  form.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    if (!input.value.trim()) return input.focus();
+    await cambiarMovimiento(movimiento.id, { monto: input.value.trim() });
+  });
+  articulo.append(cabecera, titulo, descripcion, form);
+  articulo.addEventListener("click", (evento) => {
+    if (evento.target === articulo || evento.target === titulo)
+      abrirEditor(movimiento);
+  });
+  return articulo;
+}
+
+function crearResumen(resumen) {
+  const bloque = elemento("section", "resumen-cuentas");
+  const encabezado = elemento("div", "cuentas-encabezado");
+  encabezado.append(
+    elemento("div", "cuentas-titulo", "Esta semana"),
+    elemento("span", "cuentas-subtitulo", "Sus cuentas al día"),
+  );
+  const cifras = elemento("div", "cifras");
+  const datos = [
+    ["Entró", sumarSoles(resumen.ventas, resumen.cobros_fiado), "cifra-entra"],
+    ["Salió", resumen.gastos, "cifra-sale"],
+    [
+      "Quedó",
+      resumen.flujo_semanal,
+      Number(resumen.flujo_semanal) < 0 ? "cifra-sale" : "cifra-flujo",
+    ],
+  ];
+  for (const [nombre, monto, clase] of datos) {
+    const cifra = elemento("div", `cifra ${clase}`);
+    cifra.append(
+      elemento("span", "cifra-nombre", nombre),
+      elemento("strong", "cifra-monto", soles(monto)),
+    );
+    cifras.append(cifra);
+  }
+  const fiado = elemento("div", "fiado-total");
+  fiado.append(
+    elemento("span", "fiado-label", "Le deben"),
+    elemento("strong", "fiado-monto", soles(resumen.fiado_abierto)),
+  );
+  const estimacion = elemento(
+    "p",
+    "estimacion",
+    resumen.estimacion.explicacion,
+  );
+  bloque.append(encabezado, cifras, fiado, estimacion, crearBotonLimpiar());
+  return bloque;
+}
+
+function crearMovimientos(movimientos) {
+  const bloque = elemento("section", "lista-cuentas");
+  const confirmados = movimientos.filter((movimiento) => movimiento.monto);
+  if (confirmados.length === 0) return bloque;
+  const grupos = new Map();
+  for (const movimiento of confirmados) {
+    const grupo = grupos.get(movimiento.dia) || [];
+    grupo.push(movimiento);
+    grupos.set(movimiento.dia, grupo);
+  }
+  for (const [dia, filas] of grupos) {
+    bloque.append(elemento("h3", "dia-titulo", formatoDia(dia)));
+    const lista = elemento("div", "movimientos-dia");
+    for (const movimiento of filas) lista.append(botonMovimiento(movimiento));
+    bloque.append(lista);
+  }
+  return bloque;
+}
+
+function crearVacio() {
+  const vacio = elemento("div", "vacio");
+  vacio.append(
+    elemento("div", "vacio-icono", "✦"),
+    elemento("h2", "", "Aquí aparecerán sus cuentas"),
+    elemento("p", "", "Anote una venta, un gasto o un fiado desde el chat."),
+  );
+  return vacio;
+}
+
+function crearPendientes(movimientos) {
+  const pendientes = movimientos.filter((movimiento) => !movimiento.monto);
+  if (pendientes.length === 0) return null;
+  const bloque = elemento("section", "pendientes");
+  bloque.append(
+    elemento("h2", "seccion-titulo", "Falta completar"),
+    elemento(
+      "p",
+      "seccion-ayuda",
+      "Escriba el monto para que entre en sus cuentas.",
+    ),
+  );
+  for (const movimiento of pendientes)
+    bloque.append(campoPendiente(movimiento));
+  return bloque;
+}
+
+function crearBotonLimpiar() {
+  const boton = elemento("button", "empezar-cero", "Empezar de cero");
+  boton.type = "button";
+  boton.addEventListener("click", () => limpiarDialogo.showModal());
+  return boton;
+}
+
+function pintarCuentas(resumen, movimientos) {
+  cuentasContenido.replaceChildren();
+  cuentasContenido.append(crearResumen(resumen));
+  const pendientes = crearPendientes(movimientos);
+  if (pendientes) cuentasContenido.append(pendientes);
+  cuentasContenido.append(crearMovimientos(movimientos));
+  if (movimientos.length === 0) cuentasContenido.append(crearVacio());
+}
+
+async function cargarCuentas() {
+  cuentasContenido.replaceChildren(
+    elemento("p", "cargando", "Cargando sus cuentas…"),
+  );
+  try {
+    const [resumen, movimientos] = await Promise.all([
+      pedir("/api/resumen"),
+      pedir("/api/movimientos"),
+    ]);
+    pintarCuentas(resumen, movimientos);
+  } catch (error) {
+    cuentasContenido.replaceChildren(
+      elemento(
+        "p",
+        "error-cuentas",
+        error instanceof Error ? error.message : MSG_FALLO,
+      ),
+    );
+  }
+}
+
+function activarTab(tab) {
+  const cuentas = tab === "cuentas";
+  vistaChat.hidden = cuentas;
+  vistaCuentas.hidden = !cuentas;
+  tabChat.classList.toggle("activa", !cuentas);
+  tabCuentas.classList.toggle("activa", cuentas);
+  if (cuentas) {
+    tabCuentas.setAttribute("aria-current", "page");
+    tabChat.removeAttribute("aria-current");
+    cargarCuentas();
+  } else {
+    tabChat.setAttribute("aria-current", "page");
+    tabCuentas.removeAttribute("aria-current");
+  }
+}
+
+function abrirEditor(movimiento) {
+  movimientoActual = movimiento;
+  const tipo = TIPO[movimiento.tipo] || TIPO.venta;
+  editorTitulo.textContent = `${tipo.palabra}: ${movimiento.producto}`;
+  editorCantidad.value = movimiento.cantidad;
+  editorMonto.value = movimiento.monto;
+  editorAviso.hidden = movimiento.tipo !== "fiado";
+  editorAviso.textContent =
+    "Si ya recibió un cobro de este fiado, también se borrará.";
+  borrarPaso.hidden = true;
+  document.getElementById("editor-borrar").hidden = false;
+  editor.showModal();
+}
+
+async function cambiarMovimiento(id, cambios) {
+  bloquear(true);
+  try {
+    await pedir(`/api/movimientos/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(cambios),
+    });
+    if (editor.open) editor.close();
+    await cargarCuentas();
+  } catch (error) {
+    alert(error instanceof Error ? error.message : MSG_FALLO);
+  } finally {
+    bloquear(false);
+  }
+}
+
+async function borrarMovimiento() {
+  if (!movimientoActual) return;
+  bloquear(true);
+  try {
+    await pedir(`/api/movimientos/${movimientoActual.id}`, {
+      method: "DELETE",
+    });
+    editor.close();
+    await cargarCuentas();
+  } catch (error) {
+    alert(error instanceof Error ? error.message : MSG_FALLO);
+  } finally {
+    bloquear(false);
+  }
+}
+
+editorForm.addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  if (!movimientoActual) return;
+  const cambios = {
+    cantidad: Number(editorCantidad.value),
+    monto: editorMonto.value.trim(),
+  };
+  cambiarMovimiento(movimientoActual.id, cambios);
+});
+
+document
+  .getElementById("editor-cancelar")
+  .addEventListener("click", () => editor.close());
+document.getElementById("editor-borrar").addEventListener("click", () => {
+  borrarPregunta.textContent = descripcionBorrado(movimientoActual);
+  borrarPaso.hidden = false;
+  document.getElementById("editor-borrar").hidden = true;
+});
+document.getElementById("borrar-cancelar").addEventListener("click", () => {
+  borrarPaso.hidden = true;
+  document.getElementById("editor-borrar").hidden = false;
+});
+document
+  .getElementById("borrar-confirmar")
+  .addEventListener("click", borrarMovimiento);
+document
+  .getElementById("limpiar-cancelar")
+  .addEventListener("click", () => limpiarDialogo.close());
+document
+  .getElementById("limpiar-form")
+  .addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+    bloquear(true);
+    try {
+      await pedir("/api/movimientos", { method: "DELETE" });
+      limpiarDialogo.close();
+      await cargarCuentas();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : MSG_FALLO);
+    } finally {
+      bloquear(false);
+    }
+  });
+
+tabChat.addEventListener("click", () => activarTab("chat"));
+tabCuentas.addEventListener("click", () => activarTab("cuentas"));
+
 let preparando = false;
 
 botonHablar.addEventListener("pointerdown", async (evento) => {
@@ -271,7 +635,6 @@ botonHablar.addEventListener("pointerdown", async (evento) => {
   preparando = true;
   const inicio = Date.now();
   const soltar = () => {
-    // A short tap keeps recording. Releasing a hold sends the note.
     if (grabacion && Date.now() - inicio > MS_MANTENER) terminarGrabacion();
   };
   addEventListener("pointerup", soltar, { once: true });
@@ -283,7 +646,6 @@ botonHablar.addEventListener("pointerdown", async (evento) => {
   }
 });
 
-// A keyboard or screen reader activates with click and no pointer.
 botonHablar.addEventListener("click", async (evento) => {
   if (evento.detail !== 0 || ocupado) return;
   if (grabacion) terminarGrabacion();

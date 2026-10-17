@@ -77,6 +77,51 @@ request gets 401. The messages are processed in order and the answer is the
 output CSV (`text/csv`) with the header
 `id_mensaje,tipo,producto,cantidad,monto,requiere_confirmacion`.
 
+## `GET /api/movimientos`
+
+Returns every movement, newest first. `dia` and `hora` use Lima time. The amount
+is an empty string while the row still needs confirmation.
+
+```json
+[
+  {
+    "id": 12,
+    "id_mensaje": "E09",
+    "dia": "2026-10-17",
+    "hora": "13:42",
+    "tipo": "venta",
+    "producto": "atún",
+    "cantidad": "3",
+    "monto": "13.50",
+    "cliente": null,
+    "requiere_confirmacion": "NO"
+  }
+]
+```
+
+## `PATCH /api/movimientos/:id`
+
+Changes the quantity, amount, or both. The body needs at least one field:
+
+```json
+{ "cantidad": 3, "monto": "13.50" }
+```
+
+`cantidad` is a positive number. `monto` is a positive soles string with at most
+two decimal places. The server converts it to integer centavos before it stores
+it. An invalid id, body, quantity, or amount gets status 400. A missing movement
+gets status 404.
+
+## `DELETE /api/movimientos/:id`
+
+Deletes one movement. Deleting a `fiado` also deletes a `cobro_fiado` that paid
+that credit. The response includes `cobro_borrado: true` when that happened.
+
+## `DELETE /api/movimientos`
+
+Deletes every movement and the message log. A message delivered again after the
+clear is therefore booked again.
+
 ## `GET /api/resumen`
 
 The week's totals as strings in soles: `ventas`, `cobros_fiado`, `gastos`,

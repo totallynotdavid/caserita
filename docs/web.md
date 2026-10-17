@@ -23,9 +23,10 @@ The Worker changes only the URL scheme to `http:`. The scheme picks the port of
 the VPC service and whether the tunnel speaks TLS to the server, and the server
 speaks plain HTTP. Method, path, query, headers and body pass through.
 
-The page calls `POST /api/mensaje` (JSON `{texto}` or multipart `audio`) and
-`GET /api/resumen`. It never calls `POST /api/semana`, which needs the admin
-token. See [the API](api.md).
+The page calls `POST /api/mensaje` (JSON `{texto}` or multipart `audio`),
+`GET /api/resumen`, and `GET /api/movimientos`. It sends movement edits and
+deletions to the movement routes. It never calls `POST /api/semana`, which needs
+the admin token. See [the API](api.md).
 
 ## The page
 
@@ -39,6 +40,13 @@ token. See [the API](api.md).
 - `MediaRecorder` records `audio/webm` or `audio/mp4`, whichever the browser
   supports. The server accepts both.
 - A refused or missing microphone shows a message and the typed box still works.
+
+The page has two tabs: `Chat` and `Mis cuentas`. The account tab shows the
+week's three cash figures, open fiado, the payment estimate, pending amounts,
+and movements grouped by day. Tapping a movement opens its editor. The editor
+can change quantity or amount, delete one movement, or clear the whole account
+after a confirmation. It loads both account endpoints whenever the tab opens, so
+messages received on WhatsApp appear the next time the tab opens.
 
 The summary is built in the page from `GET /api/resumen`. The payment estimate
 is the server's own reply to the question "¿Cuánto puedo pagar de cuota al

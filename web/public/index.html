@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#075e54" />
+    <meta name="theme-color" content="#ffffff" />
     <title>Caserita</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/style.css" />
@@ -17,35 +17,134 @@
       <p>Sus cuentas, con su voz</p>
     </header>
 
-    <main id="chat" class="chat" aria-live="polite"></main>
+    <main class="vistas">
+      <section id="chat-vista" class="vista vista-chat" aria-label="Chat">
+        <div id="chat" class="chat" aria-live="polite"></div>
 
-    <footer class="controles">
-      <div class="atajos">
-        <button type="button" class="atajo" id="resumen">
-          Resumen de la semana
-        </button>
-        <button type="button" class="atajo" id="cuota">
-          ¿Cuánto puedo pagar de cuota?
-        </button>
-      </div>
+        <footer class="controles">
+          <div class="atajos">
+            <button type="button" class="atajo" id="resumen">
+              Resumen de la semana
+            </button>
+            <button type="button" class="atajo" id="cuota">
+              ¿Cuánto puedo pagar de cuota?
+            </button>
+          </div>
 
-      <button type="button" class="hablar" id="hablar">
-        <span class="hablar-icono" aria-hidden="true">🎤</span>
-        <span id="hablar-texto">Toque para hablar</span>
+          <button type="button" class="hablar" id="hablar">
+            <span class="hablar-icono" aria-hidden="true">🎤</span>
+            <span id="hablar-texto">Toque para hablar</span>
+          </button>
+
+          <form class="escribir" id="formulario" autocomplete="off">
+            <input
+              id="texto"
+              name="texto"
+              type="text"
+              enterkeyhint="send"
+              placeholder="O escriba aquí"
+              aria-label="Escriba su mensaje"
+            />
+            <button type="submit" class="enviar" id="enviar">Enviar</button>
+          </form>
+        </footer>
+      </section>
+
+      <section
+        id="cuentas-vista"
+        class="vista vista-cuentas"
+        aria-label="Mis cuentas"
+        hidden
+      >
+        <div id="cuentas-contenido" class="cuentas-contenido"></div>
+      </section>
+    </main>
+
+    <nav class="pestanas" aria-label="Secciones">
+      <button
+        type="button"
+        class="pestana activa"
+        id="tab-chat"
+        aria-current="page"
+      >
+        <span aria-hidden="true">◌</span>
+        Chat
       </button>
+      <button type="button" class="pestana" id="tab-cuentas">
+        <span aria-hidden="true">▦</span>
+        Mis cuentas
+      </button>
+    </nav>
 
-      <form class="escribir" id="formulario" autocomplete="off">
-        <input
-          id="texto"
-          name="texto"
-          type="text"
-          enterkeyhint="send"
-          placeholder="O escriba aquí"
-          aria-label="Escriba su mensaje"
-        />
-        <button type="submit" class="enviar" id="enviar">Enviar</button>
+    <dialog id="editor" class="hoja">
+      <form method="dialog" id="editor-form">
+        <div class="hoja-mango" aria-hidden="true"></div>
+        <p class="hoja-kicker" id="editor-kicker">Editar movimiento</p>
+        <h2 id="editor-titulo">Movimiento</h2>
+        <button type="button" class="boton-borrar" id="editor-borrar">
+          Borrar este movimiento
+        </button>
+        <label>
+          Cantidad
+          <input
+            id="editor-cantidad"
+            name="cantidad"
+            type="number"
+            min="0.01"
+            step="any"
+            inputmode="decimal"
+          />
+        </label>
+        <label>
+          Monto en soles
+          <input
+            id="editor-monto"
+            name="monto"
+            type="text"
+            inputmode="decimal"
+            placeholder="Ej. 12.50"
+          />
+        </label>
+        <p id="editor-aviso" class="hoja-aviso" hidden></p>
+        <div class="hoja-acciones">
+          <button type="button" class="boton-secundario" id="editor-cancelar">
+            Cancelar
+          </button>
+          <button type="submit" class="boton-principal">Guardar</button>
+        </div>
+        <div id="borrar-paso" class="confirmar-borrar" hidden>
+          <p id="borrar-pregunta"></p>
+          <div class="hoja-acciones">
+            <button type="button" class="boton-secundario" id="borrar-cancelar">
+              No borrar
+            </button>
+            <button type="button" class="boton-peligro" id="borrar-confirmar">
+              Sí, borrar
+            </button>
+          </div>
+        </div>
       </form>
-    </footer>
+    </dialog>
+
+    <dialog id="limpiar-dialogo" class="hoja">
+      <form method="dialog" id="limpiar-form">
+        <div class="hoja-mango" aria-hidden="true"></div>
+        <p class="hoja-kicker">Borrar todas las cuentas</p>
+        <h2>¿Empezar de cero?</h2>
+        <p>
+          Se borrarán todas sus ventas, gastos, fiados y cobros. También se
+          borrarán los mensajes guardados. Esta acción no se puede deshacer.
+        </p>
+        <div class="hoja-acciones">
+          <button type="button" class="boton-secundario" id="limpiar-cancelar">
+            Cancelar
+          </button>
+          <button type="submit" class="boton-peligro" id="limpiar-confirmar">
+            Borrar todo
+          </button>
+        </div>
+      </form>
+    </dialog>
 
     <script type="module" src="/app.js"></script>
   </body>

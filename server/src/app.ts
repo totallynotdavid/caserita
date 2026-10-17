@@ -5,6 +5,7 @@ import { aFila, creditosAbiertos, estimarCuota } from "./book.ts";
 import { escribirFilas, leerMensajes } from "./csv.ts";
 import type { Manejador } from "./handle.ts";
 import { formatoMonto } from "./money.ts";
+import { aCentavos } from "./money.ts";
 import { NO_PUDE, textoCuota } from "./reply.ts";
 import type { Store } from "./store.ts";
 import { AUDIO_MAXIMO, extensionDe, tipoBase } from "./transcribe.ts";
@@ -30,6 +31,37 @@ function esAdmin(
 ): boolean {
   if (!token || !cabecera?.startsWith("Bearer ")) return false;
   return timingSafeEqual(digest(cabecera.slice(7)), digest(token));
+}
+
+function idDeParametro(valor: string): number | null {
+  if (!/^\d+$/.test(valor)) return null;
+  const id = Number(valor);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
+function cantidadDeCuerpo(valor: unknown): number | undefined | null {
+  if (valor === undefined) return undefined;
+  if (
+    typeof valor !== "number" ||
+    !Number.isFinite(valor) ||
+    valor <= 0 ||
+    valor > 1_000_000
+  )
+    return null;
+  return valor;
+}
+
+function montoDeCuerpo(valor: unknown): number | undefined | null {
+  if (valor === undefined) return undefined;
+  if (
+    typeof valor !== "string" ||
+    !/^\d+(?:\.\d{1,2})?$/.test(valor) ||
+    Number(valor) <= 0 ||
+    Number(valor) > 1_000_000 ||
+    !Number.isFinite(Number(valor))
+  )
+    return null;
+  return aCentavos(Number(valor));
 }
 
 export function crearApp(deps: AppDeps): Hono {
@@ -104,6 +136,62 @@ export function crearApp(deps: AppDeps): Hono {
     return c.body(escribirFilas(filas), 200, {
       "content-type": "text/csv; charset=utf-8",
     });
+  });
+
+  app.get("/api/movimientos", (c) => c.json(deps.store.movimientos()));
+
+  app.patch("/api/movimientos/:id", async (c) => {
+    const id = idDeParametro(c.req.param("id"));
+    if (id === null) return c.json({ error: "El id no es válido" }, 400);
+    const cuerpo = (await c.req.json().catch(() => null)) as {
+      cantidad?: unknown;
+      monto?: unknown;
+    } | null;
+    if (
+      !cuerpo ||
+      (cuerpo.cantidad === undefined && cuerpo.monto === undefined)
+    )
+      return c.json({ error: "Indique la cantidad o el monto" }, 400);
+    const cantidad = cantidadDeCuerpo(cuerpo.cantidad);
+    const centavos = montoDeCuerpo(cuerpo.monto);
+    if (cantidad === null)
+      return c.json(
+        { error: "La cantidad debe ser un número mayor que cero" },
+        400,
+      );
+    if (centavos === null)
+      return c.json(
+        { error: "El monto debe ser soles positivos, por ejemplo 12.50" },
+        400,
+      );
+    const existe = deps.store.transaccion(() =>
+      deps.store.actualizarMovimiento(id, { cantidad, centavos }),
+    );
+    if (!existe) return c.json({ error: "No encontré ese movimiento" }, 404);
+    return c.json({
+      movimiento: deps.store.movimientos().find((x) => x.id === id),
+    });
+  });
+
+  app.delete("/api/movimientos/:id", (c) => {
+    const id = idDeParametro(c.req.param("id"));
+    if (id === null) return c.json({ error: "El id no es válido" }, 400);
+    const resultado = deps.store.transaccion(() =>
+      deps.store.borrarMovimiento(id),
+    );
+    if (!resultado) return c.json({ error: "No encontré ese movimiento" }, 404);
+    return c.json({
+      borrado: true,
+      cobro_borrado: resultado.cobroBorrado,
+      mensaje: resultado.cobroBorrado
+        ? "También borré el cobro que pagaba este fiado."
+        : "Movimiento borrado.",
+    });
+  });
+
+  app.delete("/api/movimientos", (c) => {
+    deps.store.reiniciar();
+    return c.json({ borrado: true });
   });
 
   app.get("/api/resumen", (c) => {

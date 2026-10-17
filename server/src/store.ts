@@ -4,6 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import type { FilaNueva } from "./book.ts";
 import type { Fila, Salida, Tipo, Transaccion } from "./types.ts";
 import { aFila } from "./book.ts";
+import { formatoMonto } from "./money.ts";
 
 const ESQUEMA = `
 CREATE TABLE IF NOT EXISTS mensajes (
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS transacciones (
   centavos INTEGER CHECK (centavos IS NULL OR centavos > 0),
   cliente TEXT,
   credito_id INTEGER REFERENCES transacciones(id),
-  pregunta INTEGER NOT NULL
+  pregunta INTEGER NOT NULL,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `;
 
@@ -35,8 +37,48 @@ interface FilaSql {
   credito_id: number | null;
 }
 
+export interface Movimiento {
+  id: number;
+  id_mensaje: string;
+  dia: string;
+  hora: string;
+  tipo: Tipo;
+  producto: string;
+  cantidad: string;
+  monto: string;
+  cliente: string | null;
+  requiere_confirmacion: "SI" | "NO";
+}
+
+interface MovimientoSql {
+  id: number;
+  mensaje_id: string;
+  dia: string;
+  hora: string;
+  tipo: string;
+  producto: string;
+  cantidad: number;
+  centavos: number | null;
+  cliente: string | null;
+}
+
 function aTransaccion(r: FilaSql): Transaccion {
   return { ...r, tipo: r.tipo as Tipo };
+}
+
+function aMovimiento(r: MovimientoSql): Movimiento {
+  return {
+    id: r.id,
+    id_mensaje: r.mensaje_id,
+    dia: r.dia,
+    hora: r.hora,
+    tipo: r.tipo as Tipo,
+    producto: r.producto,
+    cantidad: String(r.cantidad),
+    monto: r.centavos === null ? "" : formatoMonto(r.centavos),
+    cliente: r.cliente,
+    requiere_confirmacion: r.centavos === null ? "SI" : "NO",
+  };
 }
 
 /**
@@ -81,6 +123,20 @@ export class Store {
       )
       .all() as unknown as FilaSql[];
     return filas.map(aTransaccion);
+  }
+
+  movimientos(): Movimiento[] {
+    const filas = this.#db
+      .prepare(
+        `SELECT id, mensaje_id,
+          strftime('%Y-%m-%d', creado_en, '-5 hours') AS dia,
+          strftime('%H:%M', creado_en, '-5 hours') AS hora,
+          tipo, producto, cantidad, centavos, cliente
+        FROM transacciones
+        ORDER BY id DESC`,
+      )
+      .all() as unknown as MovimientoSql[];
+    return filas.map(aMovimiento);
   }
 
   filas(): Fila[] {
@@ -166,6 +222,49 @@ export class Store {
       )
       .all() as unknown as FilaSql[];
     return filas.map(aTransaccion).toSorted((a, b) => a.id - b.id);
+  }
+
+  actualizarMovimiento(
+    id: number,
+    cambios: { cantidad?: number; centavos?: number | null },
+  ): boolean {
+    const actual = this.#db
+      .prepare("SELECT 1 FROM transacciones WHERE id = ?")
+      .get(id);
+    if (!actual) return false;
+    const sets: string[] = [];
+    const valores: (number | null)[] = [];
+    if (cambios.cantidad !== undefined) {
+      sets.push("cantidad = ?");
+      valores.push(cambios.cantidad);
+    }
+    if (cambios.centavos !== undefined) {
+      sets.push("centavos = ?");
+      valores.push(cambios.centavos);
+    }
+    if (sets.length === 0) return true;
+    this.#db
+      .prepare(`UPDATE transacciones SET ${sets.join(", ")} WHERE id = ?`)
+      .run(...valores, id);
+    return true;
+  }
+
+  borrarMovimiento(id: number): { cobroBorrado: boolean } | null {
+    const movimiento = this.#db
+      .prepare("SELECT tipo FROM transacciones WHERE id = ?")
+      .get(id) as { tipo: string } | undefined;
+    if (!movimiento) return null;
+    let cobroBorrado = false;
+    if (movimiento.tipo === "fiado") {
+      const resultado = this.#db
+        .prepare(
+          "DELETE FROM transacciones WHERE tipo = 'cobro_fiado' AND credito_id = ?",
+        )
+        .run(id);
+      cobroBorrado = resultado.changes > 0;
+    }
+    this.#db.prepare("DELETE FROM transacciones WHERE id = ?").run(id);
+    return { cobroBorrado };
   }
 
   /** The row the shopkeeper was last asked about, if any. */
