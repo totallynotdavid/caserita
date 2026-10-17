@@ -1,6 +1,10 @@
+import { dirname } from "node:path";
+
 export interface Config {
   port: number;
   dbPath: string;
+  dataDir: string;
+  whatsapp: boolean;
   adminToken: string | undefined;
   groqKey: string | undefined;
   geminiKey: string | undefined;
@@ -18,9 +22,12 @@ export function cargarEnv(): void {
 const vacioANada = (v: string | undefined) => (v === "" ? undefined : v);
 
 export function leerConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  const dbPath = vacioANada(env["DB_PATH"]) ?? "data/caserita.sqlite";
   return {
     port: Number(vacioANada(env["PORT"]) ?? 8787),
-    dbPath: vacioANada(env["DB_PATH"]) ?? "data/caserita.sqlite",
+    dbPath,
+    dataDir: dirname(dbPath),
+    whatsapp: env["WHATSAPP"] === "on",
     adminToken: vacioANada(env["ADMIN_TOKEN"]),
     groqKey: vacioANada(env["GROQ_API_KEY"]),
     geminiKey: vacioANada(env["GEMINI_API_KEY"]),
