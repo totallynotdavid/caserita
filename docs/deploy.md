@@ -75,7 +75,7 @@ the name used by the Worker source:
 ```jsonc
 "vpc_services": [
   {
-    "binding": "CASERITA_API",
+    "binding": "CASERITA",
     "service_id": "<VPC_SERVICE_ID>"
   }
 ]
