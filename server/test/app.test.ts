@@ -1,8 +1,13 @@
+import { mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import OpenAI from "openai";
 import { describe, expect, test } from "vitest";
 import { crearApp } from "../src/app.ts";
+import { Store } from "../src/store.ts";
 import { crearTranscriptor } from "../src/transcribe.ts";
 import {
   guion,
@@ -265,6 +270,49 @@ describe("GET /api/resumen", () => {
 });
 
 describe("movimientos", () => {
+  test("a file from before rows had a time lists its rows and takes new ones", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "caserita-"));
+    const ruta = join(dir, "viejo.sqlite");
+    const viejo = new DatabaseSync(ruta);
+    viejo.exec(`
+      CREATE TABLE mensajes (id TEXT PRIMARY KEY, orden INTEGER NOT NULL, salida TEXT NOT NULL);
+      CREATE TABLE transacciones (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        mensaje_id TEXT NOT NULL REFERENCES mensajes(id),
+        tipo TEXT NOT NULL, producto TEXT NOT NULL, cantidad REAL NOT NULL,
+        centavos INTEGER, cliente TEXT,
+        credito_id INTEGER REFERENCES transacciones(id),
+        pregunta INTEGER NOT NULL
+      );
+      INSERT INTO mensajes VALUES ('m1', 1, '{}');
+      INSERT INTO transacciones (mensaje_id, tipo, producto, cantidad, centavos, pregunta)
+        VALUES ('m1', 'venta', 'pan', 5, 100, 1);
+    `);
+    viejo.close();
+    const store = new Store(ruta);
+    try {
+      const { manejador } = manejadorDe(guion({}));
+      const app = crearApp({ manejador, store });
+      store.insertar("m1", 1, {
+        tipo: "gasto",
+        producto: "agua",
+        cantidad: 1,
+        centavos: 4500,
+        cliente: null,
+        credito_id: null,
+      });
+      const filas = (await (await app.request("/api/movimientos")).json()) as {
+        producto: string;
+        dia: string;
+      }[];
+      expect(filas.map((f) => f.producto).toSorted()).toEqual(["agua", "pan"]);
+      for (const f of filas) expect(f.dia).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    } finally {
+      store.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test("lists rows with dates and edits the amount and quantity", async () => {
     const app = appDe();
     await app.request(

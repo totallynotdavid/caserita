@@ -93,6 +93,22 @@ export class Store {
     this.#db = new DatabaseSync(ruta);
     this.#db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     this.#db.exec(ESQUEMA);
+    this.#agregarCreadoEn();
+  }
+
+  /**
+   * A file made before rows had a time lacks the column. SQLite cannot add a
+   * column whose default is a function call, so its old rows get the time of
+   * this upgrade and every insert writes the time itself.
+   */
+  #agregarCreadoEn(): void {
+    const columnas = this.#db
+      .prepare("SELECT name FROM pragma_table_info('transacciones')")
+      .all() as { name: string }[];
+    if (columnas.some((c) => c.name === "creado_en")) return;
+    this.#db.exec(
+      "ALTER TABLE transacciones ADD COLUMN creado_en TEXT NOT NULL DEFAULT ''; UPDATE transacciones SET creado_en = datetime('now');",
+    );
   }
 
   close(): void {
@@ -178,7 +194,7 @@ export class Store {
   insertar(mensajeId: string, orden: number, fila: FilaNueva): Transaccion {
     const r = this.#db
       .prepare(
-        "INSERT INTO transacciones (mensaje_id, tipo, producto, cantidad, centavos, cliente, credito_id, pregunta) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO transacciones (mensaje_id, tipo, producto, cantidad, centavos, cliente, credito_id, pregunta, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now')) RETURNING id",
       )
       .get(
         mensajeId,
