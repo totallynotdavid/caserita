@@ -5,10 +5,11 @@ import makeWASocket, {
   downloadMediaMessage,
   isLidUser,
   isPnUser,
+  jidDecode,
   normalizeMessageContent,
   useMultiFileAuthState,
 } from "baileys";
-import type { WAMessage } from "baileys";
+import type { WAMessage, WAMessageKey } from "baileys";
 import type { Logger } from "pino";
 import type { Manejador } from "./handle.ts";
 import { AUDIO_ILEGIBLE, NO_PUDE } from "./reply.ts";
@@ -22,6 +23,35 @@ export interface Receptor {
   responder: (jid: string, texto: string) => Promise<unknown>;
   presencia: (estado: "composing" | "paused", jid: string) => Promise<unknown>;
   log: Log;
+  /** Whether to answer this chat; every chat is answered when absent. */
+  permitido?: (key: WAMessageKey) => Promise<boolean>;
+}
+
+const numero = (jid: string | null | undefined) =>
+  jid && isPnUser(jid) ? jidDecode(jid)?.user : undefined;
+
+/**
+ * Builds the sender check for a list of phone numbers (digits only). A chat
+ * can arrive addressed by its LID, as it does when the sender shows a username
+ * instead of a number; then the phone number is `remoteJidAlt` or, failing
+ * that, the session's LID mapping.
+ */
+export function permitirNumeros(
+  numeros: string[],
+  pnDeLid: (lid: string) => Promise<string | null>,
+): ((key: WAMessageKey) => Promise<boolean>) | undefined {
+  if (numeros.length === 0) return undefined;
+  const permitidos = new Set(numeros);
+  return async ({ remoteJid, remoteJidAlt }) => {
+    for (const jid of [remoteJid, remoteJidAlt]) {
+      const n = numero(jid);
+      if (n && permitidos.has(n)) return true;
+    }
+    if (!remoteJid || !isLidUser(remoteJid)) return false;
+    const pn = await pnDeLid(remoteJid).catch(() => null);
+    const n = numero(pn);
+    return n !== undefined && permitidos.has(n);
+  };
 }
 
 interface Upsert {
@@ -100,6 +130,10 @@ export function crearReceptor(
   async function atender(mensaje: WAMessage): Promise<void> {
     const contenido = leer(mensaje);
     if (!contenido) return;
+    if (deps.permitido && !(await deps.permitido(mensaje.key))) {
+      log.info("whatsapp: remitente fuera de la lista; no respondo");
+      return;
+    }
     const { id, remoteJid: jid } = mensaje.key as {
       id: string;
       remoteJid: string;
@@ -130,6 +164,8 @@ export interface OpcionesWhatsapp {
   dataDir: string;
   manejador: Pick<Manejador, "handle">;
   log: Logger;
+  /** Phone numbers, digits only, whose chats are answered; empty answers all. */
+  permitidos?: string[];
   /** Opens one socket on the saved session; tests stand in for the network. */
   abrir?: (opciones: AperturaSocket) => Promise<SocketAbierto>;
 }
@@ -144,7 +180,11 @@ type Socket = ReturnType<typeof makeWASocket>;
 export interface SocketAbierto {
   socket: Pick<
     Socket,
-    "ev" | "sendMessage" | "sendPresenceUpdate" | "updateMediaMessage"
+    | "ev"
+    | "sendMessage"
+    | "sendPresenceUpdate"
+    | "updateMediaMessage"
+    | "signalRepository"
   >;
   saveCreds: () => Promise<void>;
 }
@@ -170,7 +210,13 @@ async function abrirReal({
 export async function iniciarWhatsapp(
   opciones: OpcionesWhatsapp,
 ): Promise<void> {
-  const { dataDir, manejador, log, abrir = abrirReal } = opciones;
+  const {
+    dataDir,
+    manejador,
+    log,
+    permitidos = [],
+    abrir = abrirReal,
+  } = opciones;
   const rutaQr = join(dataDir, ARCHIVO_QR);
   const logBaileys = log.child({ canal: "baileys" }, { level: "warn" });
   let socket: SocketAbierto["socket"] | undefined;
@@ -178,6 +224,9 @@ export async function iniciarWhatsapp(
   const recibir = crearReceptor({
     manejador,
     log,
+    permitido: permitirNumeros(permitidos, async (lid) =>
+      socket ? socket.signalRepository.lidMapping.getPNForLID(lid) : null,
+    ),
     descargar: (mensaje) =>
       downloadMediaMessage(
         mensaje,

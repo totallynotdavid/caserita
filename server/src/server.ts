@@ -23,5 +23,12 @@ serve({ fetch: app.fetch, port: config.port }, (info) => {
 });
 
 if (config.whatsapp) {
-  await iniciarWhatsapp({ dataDir: config.dataDir, manejador, log });
+  await iniciarWhatsapp({
+    dataDir: config.dataDir,
+    manejador,
+    log,
+    permitidos: config.whatsappPermitidos,
+  }).catch((error: unknown) =>
+    log.error({ error }, "no pude iniciar whatsapp; la web sigue"),
+  );
 }

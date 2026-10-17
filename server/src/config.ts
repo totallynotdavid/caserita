@@ -5,6 +5,8 @@ export interface Config {
   dbPath: string;
   dataDir: string;
   whatsapp: boolean;
+  /** Phone numbers, digits only, whose chats WhatsApp answers; empty answers all. */
+  whatsappPermitidos: string[];
   adminToken: string | undefined;
   groqKey: string | undefined;
   geminiKey: string | undefined;
@@ -28,6 +30,10 @@ export function leerConfig(env: NodeJS.ProcessEnv = process.env): Config {
     dbPath,
     dataDir: dirname(dbPath),
     whatsapp: env["WHATSAPP"] === "on",
+    whatsappPermitidos: (env["WHATSAPP_PERMITIDOS"] ?? "")
+      .split(",")
+      .map((n) => n.replace(/\D/g, ""))
+      .filter((n) => n !== ""),
     adminToken: vacioANada(env["ADMIN_TOKEN"]),
     groqKey: vacioANada(env["GROQ_API_KEY"]),
     geminiKey: vacioANada(env["GEMINI_API_KEY"]),

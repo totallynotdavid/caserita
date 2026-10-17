@@ -6,7 +6,11 @@ import { DisconnectReason } from "baileys";
 import type { WAMessage } from "baileys";
 import pino from "pino";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { crearReceptor, iniciarWhatsapp } from "../src/whatsapp.ts";
+import {
+  crearReceptor,
+  iniciarWhatsapp,
+  permitirNumeros,
+} from "../src/whatsapp.ts";
 import type { SocketAbierto } from "../src/whatsapp.ts";
 import {
   guion,
@@ -45,6 +49,7 @@ function canal(
   lecturas: Parameters<typeof guion>[0] = {},
   descargar: (m: WAMessage) => Promise<Uint8Array> = async () =>
     new Uint8Array([1, 2, 3]),
+  permitido?: Parameters<typeof crearReceptor>[0]["permitido"],
 ) {
   const { manejador, store } = manejadorDe(guion(lecturas), {
     transcribir: transcriptorFalso("vendí pan 2.50"),
@@ -62,9 +67,60 @@ function canal(
     log,
     responder: async (jid, t) => void enviados.push({ jid, texto: t }),
     presencia: async (estado) => void presencias.push(estado),
+    permitido,
   });
   return { recibir, store, enviados, presencias, lineas };
 }
+
+describe("only the listed numbers are answered", () => {
+  const LID = "184467440737@lid";
+  const permitido = permitirNumeros(["51999111222"], async (lid) =>
+    lid === LID ? "51999111222@s.whatsapp.net" : null,
+  );
+
+  test.each([
+    ["by phone number", {}],
+    ["from a linked device", { remoteJid: "51999111222:7@s.whatsapp.net" }],
+    [
+      "by LID with the number alongside",
+      { remoteJid: "999@lid", remoteJidAlt: "51999111222@s.whatsapp.net" },
+    ],
+    ["by a LID the session maps to the number", { remoteJid: LID }],
+  ])("a listed sender addressed %s is answered", async (_n, key) => {
+    const { recibir, enviados } = canal(
+      { "vendí pan 2.50": venta },
+      undefined,
+      permitido,
+    );
+    await recibir({
+      type: "notify",
+      messages: [texto("P1", "vendí pan 2.50", key)],
+    });
+    expect(enviados).toHaveLength(1);
+  });
+
+  test.each([
+    ["another number", { remoteJid: "51988000111@s.whatsapp.net" }],
+    ["an unmapped LID", { remoteJid: "555@lid" }],
+  ])("%s gets no reply and books nothing", async (_n, key) => {
+    const { recibir, store, enviados, presencias } = canal(
+      { "vendí pan 2.50": venta },
+      undefined,
+      permitido,
+    );
+    await recibir({
+      type: "notify",
+      messages: [texto("P2", "vendí pan 2.50", key)],
+    });
+    expect(store.transacciones()).toEqual([]);
+    expect(enviados).toEqual([]);
+    expect(presencias).toEqual([]);
+  });
+
+  test("an empty list answers everyone", () => {
+    expect(permitirNumeros([], async () => null)).toBeUndefined();
+  });
+});
 
 describe("which messages reach the handler", () => {
   test("a text message is booked and answered in the same chat", async () => {

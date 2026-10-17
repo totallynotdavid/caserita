@@ -22,13 +22,16 @@ it. Link a spare number, never the shop's own.
 - Messages run one at a time in arrival order, and share the queue of the HTTP
   channel, so a credit payment always sees the credit it pays.
 - Every sender feeds Doña Rosa's one account.
+- With `WHATSAPP_PERMITIDOS` set, only those numbers get an answer. A sender who
+  shows a username arrives under a LID; the session maps it back to the number.
 
 ## Settings
 
-| Variable   | Meaning                                                              |
-| ---------- | -------------------------------------------------------------------- |
-| `WHATSAPP` | `on` starts the channel. Anything else leaves it off.                |
-| `DB_PATH`  | Its folder is the data folder. `data/caserita.sqlite` gives `data/`. |
+| Variable              | Meaning                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `WHATSAPP`            | `on` starts the channel. Anything else leaves it off.                                  |
+| `WHATSAPP_PERMITIDOS` | Comma-separated numbers with country code, e.g. `51999111222`. Empty answers everyone. |
+| `DB_PATH`             | Its folder is the data folder. `data/caserita.sqlite` gives `data/`.                   |
 
 The data folder holds:
 
