@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "caserita-web",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+  },
+  // Local development uses the relay in dev/ because VPC bindings have no
+  // local simulator.
+  "services": [{ "binding": "CASERITA", "service": "caserita-local-api" }],
+}

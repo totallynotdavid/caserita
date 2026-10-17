@@ -16,7 +16,7 @@ run = ["bunx oxlint --fix", "bunx oxfmt ."]
 
 [tasks.typecheck]
 description = "Type-check with tsc"
-run = "bunx tsc --noEmit"
+run = ["bunx tsc --noEmit", "bunx tsc --noEmit -p web"]
 
 [tasks.test]
 description = "Run the vitest suite offline"
@@ -25,6 +25,19 @@ run = "bunx vitest run"
 [tasks.check]
 description = "Run lint, typecheck and test"
 depends = ["lint", "typecheck", "test"]
+
+[tasks."web:dev"]
+description = "Serve the page on :8799, relaying /api to the server on :8787"
+dir = "web"
+run = "bunx wrangler dev -c wrangler.dev.jsonc -c dev/wrangler.jsonc --port 8799"
+
+[tasks."web:deploy"]
+description = "Deploy the Worker (needs VPC_SERVICE_ID and a Cloudflare login)"
+dir = "web"
+run = [
+  "sed \"s/VPC_SERVICE_ID/$VPC_SERVICE_ID/\" wrangler.jsonc > wrangler.deploy.jsonc",
+  "bunx wrangler deploy -c wrangler.deploy.jsonc",
+]
 
 [tasks.eval]
 description = "Score the 30 example messages against the real model (needs GROQ_API_KEY)"

@@ -1,0 +1,7 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "caserita-local-api",
+  "main": "relay.ts",
+  "compatibility_date": "2026-10-01",
+  "vars": { "SERVER_ORIGIN": "http://127.0.0.1:8787" },
+}

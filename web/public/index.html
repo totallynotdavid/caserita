@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#075e54" />
+    <title>Caserita</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="barra">
+      <h1>Caserita</h1>
+      <p>Sus cuentas, con su voz</p>
+    </header>
+
+    <main id="chat" class="chat" aria-live="polite"></main>
+
+    <footer class="controles">
+      <div class="atajos">
+        <button type="button" class="atajo" id="resumen">
+          Resumen de la semana
+        </button>
+        <button type="button" class="atajo" id="cuota">
+          ¿Cuánto puedo pagar de cuota?
+        </button>
+      </div>
+
+      <button type="button" class="hablar" id="hablar">
+        <span class="hablar-icono" aria-hidden="true">🎤</span>
+        <span id="hablar-texto">Toque para hablar</span>
+      </button>
+
+      <form class="escribir" id="formulario" autocomplete="off">
+        <input
+          id="texto"
+          name="texto"
+          type="text"
+          enterkeyhint="send"
+          placeholder="O escriba aquí"
+          aria-label="Escriba su mensaje"
+        />
+        <button type="submit" class="enviar" id="enviar">Enviar</button>
+      </form>
+    </footer>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

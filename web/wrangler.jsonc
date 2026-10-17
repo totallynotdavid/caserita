@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "caserita-web",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+  },
+  // The id is a placeholder: docs/web.md swaps in the real one at deploy time.
+  "vpc_services": [{ "binding": "CASERITA", "service_id": "VPC_SERVICE_ID" }],
+}
