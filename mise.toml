@@ -42,3 +42,12 @@ run = [
 [tasks.eval]
 description = "Score the 30 example messages against the real model (needs GROQ_API_KEY)"
 run = "node server/bin/eval.ts"
+
+[tasks."deploy:server"]
+description = "Build and start the server and Cloudflare Tunnel on the host"
+run = "docker compose --env-file \"${CASERITA_ENV_FILE:-../caserita.env}\" up -d --build"
+
+[tasks."deploy:web"]
+description = "Deploy the Cloudflare Worker"
+dir = "web"
+run = "bunx wrangler deploy"

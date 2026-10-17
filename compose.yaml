@@ -1,0 +1,47 @@
+services:
+  caserita:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ${CASERITA_ENV_FILE:-../caserita.env}
+    environment:
+      DB_PATH: /app/data/caserita.sqlite
+      PORT: "8787"
+    ports:
+      - "127.0.0.1:8787:8787"
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+    volumes:
+      - caserita-data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - >-
+          fetch('http://127.0.0.1:8787/api/resumen').then((response) => { if
+          (!response.ok) process.exit(1); }).catch(() => process.exit(1));
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token
+      - ${TUNNEL_TOKEN:?TUNNEL_TOKEN must be set in CASERITA_ENV_FILE}
+    depends_on:
+      caserita:
+        condition: service_healthy
+    env_file:
+      - ${CASERITA_ENV_FILE:-../caserita.env}
+    restart: unless-stopped
+
+volumes:
+  caserita-data:
