@@ -28,6 +28,7 @@ cp .env.example .env   # then fill in the keys
 | `ADMIN_TOKEN`    | Bearer token that protects `POST /api/semana`. |
 | `PORT`           | HTTP port. Default `8787`.                     |
 | `DB_PATH`        | SQLite file. Default `data/caserita.sqlite`.   |
+| `WHATSAPP`       | `on` starts the WhatsApp channel.              |
 
 A real environment variable wins over `.env`.
 
@@ -72,6 +73,11 @@ mise run web:dev
 Serves the chat page on `http://localhost:8799`, with `/api` relayed to the
 server on port 8787. Running it for real, and deploying it, are in
 [the web channel](docs/web.md).
+
+## Answer on WhatsApp
+
+With `WHATSAPP=on` the server also answers the chats of a linked spare number.
+Linking and the risks are in [the WhatsApp guide](docs/whatsapp.md).
 
 ## Check
 
