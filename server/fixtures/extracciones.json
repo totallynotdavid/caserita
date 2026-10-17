@@ -1,0 +1,508 @@
+{
+  "buenos días, vendí 10 panes a 0.30 y 3 leches gloria a 4.20": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "pan",
+        "cantidad": 10,
+        "precio_unitario": 0.3,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      },
+      {
+        "tipo": "venta",
+        "producto": "leche gloria",
+        "cantidad": 3,
+        "precio_unitario": 4.2,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "pagué el agua 45": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "agua",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 45,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "la señora Rosa María se llevó 1 aceite primor fiado, está 11 soles": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "fiado",
+        "producto": "aceite primor",
+        "cantidad": 1,
+        "precio_unitario": null,
+        "total_dicho": 11,
+        "descuento": null,
+        "cliente": "la señora Rosa María"
+      }
+    ]
+  },
+  "vendí 4 gaseosas a 2.50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "gaseosa",
+        "cantidad": 4,
+        "precio_unitario": 2.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "cerré caja, aparte de lo anotado salió 150 en abarrotes sueltos": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "abarrotes sueltos",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 150,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "compré al mayorista 1 saco de arroz a 190, me rebajó 10": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "saco de arroz",
+        "cantidad": 1,
+        "precio_unitario": 190,
+        "total_dicho": null,
+        "descuento": 10,
+        "cliente": null
+      }
+    ]
+  },
+  "vendi dos kilos de azucar a cuatro soles el kilo": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "azúcar",
+        "cantidad": 2,
+        "precio_unitario": 4,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "bendi 6 guevos a 0.50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "huevo",
+        "cantidad": 6,
+        "precio_unitario": 0.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "vendí 3 atunes": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "atún",
+        "cantidad": 3,
+        "precio_unitario": null,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "hoy en el día salieron 210 en ventas sueltas": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "ventas sueltas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 210,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "vendí 5 panes a 0.30, no perdón, fueron 8": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "pan",
+        "cantidad": 8,
+        "precio_unitario": 0.3,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "la señora Rosa María me pagó lo del aceite": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "cobro_fiado",
+        "producto": "",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": "la señora Rosa María"
+      }
+    ]
+  },
+  "pagué el balón de gas 50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "balón de gas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 50,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "le fié 2 cervezas a don Pepe": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "fiado",
+        "producto": "cerveza",
+        "cantidad": 2,
+        "precio_unitario": null,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": "don Pepe"
+      }
+    ]
+  },
+  "vendí 1 kilo de pollo a 12 y 2 yogures a 5.50 c/u": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "pollo",
+        "cantidad": 1,
+        "precio_unitario": 12,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      },
+      {
+        "tipo": "venta",
+        "producto": "yogur",
+        "cantidad": 2,
+        "precio_unitario": 5.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "pagué al proveedor de gaseosas 180": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "gaseosas proveedor",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 180,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "vendí 12 panes a 0.30 y 2 detergentes a 6.50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "pan",
+        "cantidad": 12,
+        "precio_unitario": 0.3,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      },
+      {
+        "tipo": "venta",
+        "producto": "detergente",
+        "cantidad": 2,
+        "precio_unitario": 6.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "un cliente devolvió un yogur malogrado, le devolví 5.50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "devolución yogur",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 5.5,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "en el día se vendió 190 en total aparte de lo anotado": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "ventas sueltas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 190,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "compré bolsas para despachar": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "bolsas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "don Pepe me pagó 10 de lo que debe": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "cobro_fiado",
+        "producto": "",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 10,
+        "descuento": null,
+        "cliente": "don Pepe"
+      }
+    ]
+  },
+  "vendí tres cervezas a seis cincuenta": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "cerveza",
+        "cantidad": 3,
+        "precio_unitario": 6.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "hoy salieron 240 en ventas sueltas": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "ventas sueltas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 240,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "pagué 35 al chico que me ayuda": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "ayudante",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 35,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "vendí 20 panes a 0.30 y 5 gaseosas a 2.50": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "pan",
+        "cantidad": 20,
+        "precio_unitario": 0.3,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      },
+      {
+        "tipo": "venta",
+        "producto": "gaseosa",
+        "cantidad": 5,
+        "precio_unitario": 2.5,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "compré 2 paquetes de fideos a 2.80 para la casa, no es del negocio": {
+    "personal": true,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": []
+  },
+  "sábado bueno, 280 en ventas sueltas": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "ventas sueltas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 280,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "pagué 60 de mercadería de galletas": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "gasto",
+        "producto": "galletas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 60,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "vendí 4 leches a 4.20": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "leche",
+        "cantidad": 4,
+        "precio_unitario": 4.2,
+        "total_dicho": null,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  },
+  "domingo flojo, 120 en ventas sueltas": {
+    "personal": false,
+    "consulta": null,
+    "respuesta_pendiente": null,
+    "items": [
+      {
+        "tipo": "venta",
+        "producto": "ventas sueltas",
+        "cantidad": null,
+        "precio_unitario": null,
+        "total_dicho": 120,
+        "descuento": null,
+        "cliente": null
+      }
+    ]
+  }
+}
