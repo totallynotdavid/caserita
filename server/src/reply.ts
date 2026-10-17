@@ -92,6 +92,7 @@ export const PERSONAL =
   "Eso parece una compra personal, no del negocio, así que no lo anoté.";
 export const AUDIO_ILEGIBLE =
   "No pude escuchar bien el audio. ¿Me lo manda otra vez o me lo escribe?";
+export const NO_PUDE = "No pude procesar el mensaje. Intente de nuevo.";
 export const MONTO_NO_ENTENDIDO = "Perdone, no entendí el monto.";
 
 function sinMonto(pendientes: Transaccion[]): string {

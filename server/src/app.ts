@@ -5,7 +5,7 @@ import { aFila, creditosAbiertos, estimarCuota } from "./book.ts";
 import { escribirFilas, leerMensajes } from "./csv.ts";
 import type { Manejador } from "./handle.ts";
 import { formatoMonto } from "./money.ts";
-import { textoCuota } from "./reply.ts";
+import { NO_PUDE, textoCuota } from "./reply.ts";
 import type { Store } from "./store.ts";
 import { AUDIO_MAXIMO, extensionDe, tipoBase } from "./transcribe.ts";
 
@@ -37,10 +37,7 @@ export function crearApp(deps: AppDeps): Hono {
 
   app.onError((error, c) => {
     deps.log?.error(error, "error no controlado");
-    return c.json(
-      { error: "No pude procesar el mensaje. Intente de nuevo." },
-      500,
-    );
+    return c.json({ error: NO_PUDE }, 500);
   });
 
   // Counts bytes as they arrive, so an oversized upload is cut off before it is
