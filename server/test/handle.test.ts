@@ -126,7 +126,7 @@ describe("a missing amount", () => {
       id: "1",
       texto: "vendí 3 atunes",
     });
-    expect(primera.respuesta).toContain("¿A cuánto vendió los 3 atunes?");
+    expect(primera.respuesta).toContain("¿En cuánto vendió 3 atunes?");
     expect(primera.respuesta).not.toContain("anoté");
     expect(primera.filas).toEqual([
       {
@@ -183,7 +183,7 @@ describe("a missing amount", () => {
     );
     await manejador.handle({ id: "1", texto: "vendí 3 atunes" });
     const respuesta = await manejador.handle({ id: "2", texto: "no sé" });
-    expect(respuesta.respuesta).toContain("¿A cuánto vendió los 3 atunes?");
+    expect(respuesta.respuesta).toContain("¿En cuánto vendió 3 atunes?");
     expect(store.pendiente()?.centavos).toBeNull();
   });
 
@@ -208,7 +208,64 @@ describe("a missing amount", () => {
       producto: "bolsas",
       monto: "12.00",
     });
-    expect(tercera.respuesta).toContain("¿A cuánto vendió los 3 atunes?");
+    expect(tercera.respuesta).toContain("¿En cuánto vendió 3 atunes?");
+  });
+
+  test("a message with nothing to book asks the open question again", async () => {
+    const { manejador } = manejadorDe(
+      guion({ "vendí 3 atunes": atunes, "como dije": lectura() }),
+    );
+    await manejador.handle({ id: "1", texto: "vendí 3 atunes" });
+    const respuesta = await manejador.handle({ id: "2", texto: "como dije" });
+    expect(respuesta.respuesta).toBe(
+      "Perdone, no le entendí. ¿En cuánto vendió 3 atunes?",
+    );
+  });
+});
+
+describe("borra lo último", () => {
+  test("deletes the latest message's rows without a model call and asks the open question", async () => {
+    const { manejador, store } = manejadorDe(
+      guion({
+        "vendí 3 atunes": lectura({
+          items: [item({ tipo: "venta", producto: "atún", cantidad: 3 })],
+        }),
+        "vendí 2 panes y compré 2 piñas a 1": lectura({
+          items: [
+            item({
+              tipo: "venta",
+              producto: "pan",
+              cantidad: 2,
+              total_dicho: 1,
+            }),
+            item({
+              tipo: "gasto",
+              producto: "piña",
+              cantidad: 2,
+              precio_unitario: 1,
+            }),
+          ],
+        }),
+      }),
+    );
+    await manejador.handle({ id: "1", texto: "vendí 3 atunes" });
+    await manejador.handle({
+      id: "2",
+      texto: "vendí 2 panes y compré 2 piñas a 1",
+    });
+    const borrado = await manejador.handle({
+      id: "3",
+      texto: "Bórralo último... no, ¡borra lo último!",
+    });
+    expect(borrado.respuesta).toBe(
+      "Listo, borré: venta de 2 panes por S/ 1.00; gasto de 2 piñas por S/ 2.00. ¿En cuánto vendió 3 atunes?",
+    );
+    expect(store.transacciones().map((t) => t.producto)).toEqual(["atún"]);
+
+    await manejador.handle({ id: "4", texto: "Borra lo último." });
+    const vacio = await manejador.handle({ id: "5", texto: "borra lo último" });
+    expect(vacio.respuesta).toBe("No hay nada anotado para borrar.");
+    expect(store.transacciones()).toEqual([]);
   });
 });
 

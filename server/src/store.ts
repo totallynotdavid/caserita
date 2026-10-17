@@ -155,6 +155,19 @@ export class Store {
       .run(fila.producto, fila.centavos, fila.credito_id, id);
   }
 
+  /**
+   * Deletes the rows the latest message with rows added, and returns them. A
+   * cobro always comes after the fiado it pays, so no kept row points at them.
+   */
+  borrarUltimas(): Transaccion[] {
+    const filas = this.#db
+      .prepare(
+        "DELETE FROM transacciones WHERE pregunta = (SELECT MAX(pregunta) FROM transacciones) RETURNING id, mensaje_id, tipo, producto, cantidad, centavos, cliente, credito_id",
+      )
+      .all() as unknown as FilaSql[];
+    return filas.map(aTransaccion).toSorted((a, b) => a.id - b.id);
+  }
+
   /** The row the shopkeeper was last asked about, if any. */
   pendiente(): Transaccion | null {
     const r = this.#db

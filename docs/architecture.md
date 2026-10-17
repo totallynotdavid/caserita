@@ -44,12 +44,15 @@ server.
 1. `handle` returns the stored reply if the id was seen.
 2. An audio message is transcribed first. A note that cannot be heard returns an
    apology and records nothing.
-3. `extract` receives the text, the pending question and the open credits.
-4. `book` applies the rules to each item and `store` records the rows in one
+3. A short "borra lo último" (or "elimina", "anula", "quita", "deshaz" the last
+   one) deletes the rows of the latest message that added any, with no model
+   call, and the reply names them.
+4. `extract` receives the text, the pending question and the open credits.
+5. `book` applies the rules to each item and `store` records the rows in one
    SQLite transaction. A message that answers the pending question fills that
    row.
-5. `reply` writes the answer: what was noted, the next question, or the payment
-   estimate.
+6. `reply` writes the answer: what was noted, the next question, or the payment
+   estimate. A message with nothing to note asks the pending question again.
 
 ## Reading in batches
 

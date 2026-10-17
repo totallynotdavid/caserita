@@ -34,14 +34,13 @@ function cosas(t: Transaccion): string {
     : `${t.cantidad} ${plural(t.producto)}`;
 }
 
+/** Asks for a missing amount without an article, so there is no gender to get wrong. */
 export function pregunta(t: Transaccion): string {
   switch (t.tipo) {
     case "venta":
-      return t.cantidad === 1
-        ? `¿A cuánto vendió 1 ${t.producto}?`
-        : `¿A cuánto vendió los ${cosas(t)}?`;
+      return `¿En cuánto vendió ${cosas(t)}?`;
     case "gasto":
-      return `¿Cuánto pagó por ${t.producto}?`;
+      return `¿Cuánto pagó por ${t.cantidad === 1 ? t.producto : cosas(t)}?`;
     case "fiado":
       return `¿De cuánto fue el fiado de ${cosas(t)}${t.cliente ? ` a ${t.cliente}` : ""}?`;
     case "cobro_fiado":
@@ -57,7 +56,7 @@ export function frase(t: Transaccion): string {
     case "venta":
       return `venta de ${cosas(t)}${monto}`;
     case "gasto":
-      return `gasto de ${t.producto}${monto}`;
+      return `gasto de ${t.cantidad === 1 ? t.producto : cosas(t)}${monto}`;
     case "fiado":
       return `fiado de ${cosas(t)}${t.cliente ? ` a ${t.cliente}` : ""}${monto}`;
     case "cobro_fiado":
@@ -94,6 +93,12 @@ export const AUDIO_ILEGIBLE =
   "No pude escuchar bien el audio. ¿Me lo manda otra vez o me lo escribe?";
 export const NO_PUDE = "No pude procesar el mensaje. Intente de nuevo.";
 export const MONTO_NO_ENTENDIDO = "Perdone, no entendí el monto.";
+export const NO_ENTENDI = "Perdone, no le entendí.";
+export const NADA_QUE_BORRAR = "No hay nada anotado para borrar.";
+
+export function borradas(filas: Transaccion[]): string {
+  return `Listo, borré: ${filas.map(frase).join("; ")}.`;
+}
 
 function sinMonto(pendientes: Transaccion[]): string {
   return pendientes.length === 0

@@ -66,7 +66,7 @@ describe("POST /api/mensaje", () => {
       respuesta: string;
       filas: { monto: string; requiere_confirmacion: string }[];
     };
-    expect(uno.respuesta).toContain("¿A cuánto vendió los 3 atunes?");
+    expect(uno.respuesta).toContain("¿En cuánto vendió 3 atunes?");
     expect(uno.filas[0]).toMatchObject({
       monto: "",
       requiere_confirmacion: "SI",

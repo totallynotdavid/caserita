@@ -11,8 +11,11 @@ import type { MensajeEntrada } from "./csv.ts";
 import {
   AUDIO_ILEGIBLE,
   MONTO_NO_ENTENDIDO,
+  NADA_QUE_BORRAR,
+  NO_ENTENDI,
   PERSONAL,
   SIN_NADA,
+  borradas,
   confirmacion,
   pregunta,
   respuestaCompletada,
@@ -41,6 +44,26 @@ export interface Dependencias {
   extraer: Extractor;
   extraerSemana: (textos: string[]) => Extractor;
   transcribir?: Transcriptor | undefined;
+}
+
+/**
+ * "Borra lo último" and its variants undo the latest message without a model
+ * call. Only a short message counts: a longer one may carry an operation too,
+ * and that goes to the model.
+ */
+export function pideBorrarUltimo(texto: string): boolean {
+  const limpio = texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replaceAll(/\p{M}/gu, "")
+    .replaceAll(/[^a-zñ ]/g, " ")
+    .trim();
+  return (
+    limpio.split(/\s+/).length <= 6 &&
+    /\b(borra|borrar|borralo|elimina|eliminar|anula|anular|quita|deshaz|deshacer)\s+(lo|el|la)\s+ultim[oa]\b/.test(
+      limpio,
+    )
+  );
 }
 
 export interface Manejador {
@@ -89,12 +112,28 @@ export function crearManejador(deps: Dependencias): Manejador {
       texto = entrada.texto;
     }
 
+    if (pideBorrarUltimo(texto))
+      return store.transaccion(() => borrarUltimo(id, transcripcion));
+
     const txs = store.transacciones();
     const extraccion = await extraer(texto, {
       pendiente: store.pendiente(),
       creditos: creditosAbiertos(txs),
     });
     return store.transaccion(() => aplicar(id, extraccion, transcripcion));
+  }
+
+  function borrarUltimo(id: string, transcripcion: string | undefined): Salida {
+    if (store.registrarMensaje(id) === null)
+      throw new Error(`Mensaje repetido: ${id}`);
+    const filas = store.borrarUltimas();
+    const partes = [filas.length > 0 ? borradas(filas) : NADA_QUE_BORRAR];
+    const cabeza = store.pendiente();
+    if (cabeza) partes.push(pregunta(cabeza));
+    const salida: Salida = { respuesta: partes.join(" "), filas: [] };
+    if (transcripcion !== undefined) salida.transcripcion = transcripcion;
+    store.fijarSalida(id, salida);
+    return salida;
   }
 
   function aplicar(
@@ -173,9 +212,12 @@ export function crearManejador(deps: Dependencias): Manejador {
       );
     }
     if (partes.length === 0) {
-      if (noEntendido && cabeza)
-        partes.push(`${MONTO_NO_ENTENDIDO} ${pregunta(cabeza)}`);
-      else partes.push(ext.personal ? PERSONAL : SIN_NADA);
+      if (ext.personal) partes.push(PERSONAL);
+      else if (cabeza)
+        partes.push(
+          `${noEntendido ? MONTO_NO_ENTENDIDO : NO_ENTENDI} ${pregunta(cabeza)}`,
+        );
+      else partes.push(SIN_NADA);
     }
     const respuesta = partes.join("\n");
     const salida: Salida = {
