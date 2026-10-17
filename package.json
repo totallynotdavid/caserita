@@ -1,0 +1,16 @@
+{
+  "name": "caserita",
+  "private": true,
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

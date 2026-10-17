@@ -1,0 +1,31 @@
+[tools]
+bun = "1.4.3"
+node = "24.22.0"
+
+[tasks.install]
+description = "Install dependencies from bun.lock without resolving"
+run = "bun install --frozen-lockfile"
+
+[tasks.lint]
+description = "Run oxlint and the oxfmt check"
+run = ["bunx oxlint --deny-warnings", "bunx oxfmt --check ."]
+
+[tasks.fix]
+description = "Apply safe oxlint fixes and format with oxfmt"
+run = ["bunx oxlint --fix", "bunx oxfmt ."]
+
+[tasks.typecheck]
+description = "Type-check with tsc"
+run = "bunx tsc --noEmit"
+
+[tasks.test]
+description = "Run the vitest suite offline"
+run = "bunx vitest run"
+
+[tasks.check]
+description = "Run lint, typecheck and test"
+depends = ["lint", "typecheck", "test"]
+
+[tasks.eval]
+description = "Score the 30 example messages against the real model (needs GROQ_API_KEY)"
+run = "node server/bin/eval.ts"

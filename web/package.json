@@ -1,0 +1,9 @@
+{
+  "name": "@caserita/web",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261016.1",
+    "wrangler": "4.151.1"
+  }
+}
