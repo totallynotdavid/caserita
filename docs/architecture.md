@@ -1,6 +1,6 @@
 # Architecture
 
-One Node 24 process runs TypeScript directly (type stripping, no build step).
+One Node 26 process runs TypeScript directly (type stripping, no build step).
 `server/` holds the logic. `web/` is a Cloudflare Worker that serves the chat
 page and forwards `/api/*` to the server. See [the web channel](web.md).
 
