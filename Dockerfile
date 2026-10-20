@@ -7,7 +7,7 @@ COPY server/package.json server/package.json
 COPY web/package.json web/package.json
 RUN bun install --frozen-lockfile --production
 
-FROM node:24-slim
+FROM node:25-slim
 
 ENV NODE_ENV=production
 ENV DB_PATH=/app/data/caserita.sqlite
