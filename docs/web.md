@@ -61,7 +61,7 @@ binds `CASERITA` to the Worker in `dev/`, which relays to
 
 ```sh
 node server/src/server.ts    # the server, with the keys in .env
-mise run web:dev             # the page on http://localhost:8799
+bun run web:dev              # the page on http://localhost:8799
 ```
 
 Open the page in a desktop browser, in a phone-sized window. The microphone
@@ -102,10 +102,10 @@ the server and keeps it running.
 5. Deploy the Worker:
 
    ```sh
-   VPC_SERVICE_ID=<the id from step 4> mise run web:deploy
+   VPC_SERVICE_ID=<the id from step 4> bun run web:deploy
    ```
 
-   The task copies `web/wrangler.jsonc` to the git-ignored
+   The script copies `web/wrangler.jsonc` to the git-ignored
    `web/wrangler.deploy.jsonc`, with `VPC_SERVICE_ID` replaced by the id, and
    runs `wrangler deploy` with it. The id never goes into the repository.
 

@@ -14,7 +14,7 @@ version `2025.7.0` or newer.
 Install the project dependencies from the lockfile:
 
 ```sh
-mise run install
+bun install --frozen-lockfile
 ```
 
 ## Secrets
@@ -86,7 +86,7 @@ by the Worker selects the request path. Deploy the Worker after saving the
 service ID:
 
 ```sh
-mise run deploy:web
+bun run deploy:web
 ```
 
 ## Deploy the server
@@ -94,7 +94,7 @@ mise run deploy:web
 Start both Compose services from the repository root:
 
 ```sh
-CASERITA_ENV_FILE=../caserita.env mise run deploy:server
+CASERITA_ENV_FILE=../caserita.env bun run deploy:server
 ```
 
 Check the local server and its Compose health state:
@@ -161,7 +161,7 @@ rebuild the server:
 
 ```sh
 git checkout <GOOD_DEPLOYMENT_COMMIT>
-CASERITA_ENV_FILE=../caserita.env mise run deploy:server
+CASERITA_ENV_FILE=../caserita.env bun run deploy:server
 ```
 
 To inspect recent Worker versions and roll the Worker back, run:

@@ -71,5 +71,5 @@ answers.
 `server/test` drives `handle`, the HTTP app and the WhatsApp message handler
 (with recorded Baileys messages) with a stand-in extractor and temporary SQLite
 files. `web/test` drives the Worker's fetch handler with fake bindings.
-`ejemplos.test.ts` replays the extractions that `mise run eval` recorded from
-the real model for the 30 examples and requires the exact answer key.
+`ejemplos.test.ts` replays the extractions that `bun run eval` recorded from the
+real model for the 30 examples and requires the exact answer key.

@@ -17,7 +17,8 @@ The language model reads the message. The code decides every amount. See
 Install [mise](https://mise.jdx.dev), then:
 
 ```sh
-mise run install
+mise install
+bun install --frozen-lockfile
 cp .env.example .env   # then fill in the keys
 ```
 
@@ -35,7 +36,7 @@ A real environment variable wins over `.env`.
 ## Score the examples
 
 ```sh
-mise run eval
+bun run eval
 ```
 
 Reads the 30 example messages with the real model and compares the rows with the
@@ -67,7 +68,7 @@ Routes, request and response shapes, and the voice-note upload are in
 ## Open the chat page
 
 ```sh
-mise run web:dev
+bun run web:dev
 ```
 
 Serves the chat page on `http://localhost:8799`, with `/api` relayed to the
@@ -82,7 +83,7 @@ Linking and the risks are in [the WhatsApp guide](docs/whatsapp.md).
 ## Check
 
 ```sh
-mise run check
+bun run check
 ```
 
 Runs lint, type check and the tests. It needs no network and no secrets.
